@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HKG ↔ MNL Flight + Stay Tracker · May 2025</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --bg2: #1a1d27;
+      --bg3: #232738;
+      --border: #2e3347;
+      --text: #e8eaf0;
+      --muted: #7c85a2;
+      --accent: #4f8ef7;
+      --accent2: #7c5cbf;
+      --green: #34c78a;
+      --yellow: #f5c842;
+      --red: #f55e5e;
+      --orange: #f5904a;
+      --card-r: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #141827 0%, #1c2240 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 24px 24px;
+    }
+    .header-inner { max-width: 1100px; margin: 0 auto; }
+    .route-pill {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 100px; padding: 6px 16px;
+      font-size: 13px; color: var(--muted); margin-bottom: 14px;
+    }
+    .route-pill span { color: var(--text); font-weight: 600; }
+    h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .subtitle { color: var(--muted); font-size: 13px; }
+    .badges { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .badge {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 6px; padding: 4px 10px; font-size: 12px; color: var(--muted);
+    }
+    .badge b { color: var(--text); }
+
+    /* ── Layout ── */
+    main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .section-title {
+      font-size: 16px; font-weight: 600; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title .icon { font-size: 18px; }
+    .section { margin-bottom: 36px; }
+
+    /* ── Matrix Table ── */
+    .matrix-wrapper { overflow-x: auto; border-radius: var(--card-r); border: 1px solid var(--border); }
+    table { border-collapse: collapse; width: 100%; min-width: 620px; }
+    thead th {
+      background: var(--bg3); padding: 10px 14px;
+      text-align: center; font-weight: 600; font-size: 12px;
+      color: var(--muted); border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    thead th.corner { text-align: left; }
+    tbody tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
+    tbody td {
+      background: var(--bg2); padding: 10px 14px;
+      vertical-align: middle;
+    }
+    tbody td.row-label {
+      background: var(--bg3); font-weight: 600; font-size: 12px;
+      color: var(--text); white-space: nowrap; border-right: 1px solid var(--border);
+    }
+    .cell {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 4px; min-width: 110px;
+    }
+    .cell.invalid { opacity: 0.18; pointer-events: none; cursor: default; }
+    .nights {
+      font-size: 10px; color: var(--muted); font-weight: 500;
+      background: var(--bg3); border-radius: 4px; padding: 1px 5px;
+    }
+    .btn-row { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+    .btn {
+      display: inline-block; padding: 4px 8px; border-radius: 6px;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      border: 1px solid transparent; transition: opacity .15s;
+      white-space: nowrap;
+    }
+    .btn:hover { opacity: .82; text-decoration: none; }
+    .btn-gf { background: #1a73e8; color: #fff; border-color: #1a73e8; }
+    .btn-sky { background: #0770e3; color: #fff; border-color: #0770e3; }
+    .btn-kw { background: #ff6b35; color: #fff; border-color: #ff6b35; }
+
+    /* ── Accommodation Grid ── */
+    .acc-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media(max-width:680px){ .acc-grid { grid-template-columns: 1fr; } }
+    .acc-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--card-r); overflow: hidden;
+    }
+    .acc-header {
+      padding: 14px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg3);
+    }
+    .acc-logo { font-size: 22px; }
+    .acc-header-text h3 { font-size: 15px; font-weight: 700; }
+    .acc-header-text p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .acc-links { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .acc-link-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 10px; background: var(--bg3); border-radius: 8px;
+      border: 1px solid var(--border); transition: border-color .15s;
+    }
+    .acc-link-row:hover { border-color: var(--accent); text-decoration: none; }
+    .acc-link-row .info { display: flex; flex-direction: column; gap: 2px; }
+    .acc-link-row .info .dates { font-size: 12px; font-weight: 600; color: var(--text); }
+    .acc-link-row .info .nights-txt { font-size: 11px; color: var(--muted); }
+    .acc-link-row .arrow { color: var(--muted); font-size: 14px; }
+    .acc-note {
+      padding: 10px 16px 14px; font-size: 11px; color: var(--muted); line-height: 1.5;
+    }
+
+    /* ── Tips Card ── */
+    .tips-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+      gap: 14px;
+    }
+    .tip-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--card-r); padding: 16px;
+    }
+    .tip-card .tip-icon { font-size: 22px; margin-bottom: 8px; }
+    .tip-card h4 { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .tip-card p { font-size: 12px; color: var(--muted); line-height: 1.55; }
+    .tip-card a { color: var(--accent); }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;
+      font-size: 12px; color: var(--muted);
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border); padding: 20px 24px;
+      text-align: center; color: var(--muted); font-size: 12px;
+    }
+
+    /* ── Highlight best cells ── */
+    .cell.best .nights { background: #1d3a28; color: var(--green); border: 1px solid #2d5a3a; }
+
+    /* ── Tabs ── */
+    .tab-row { display: flex; gap: 4px; margin-bottom: 14px; }
+    .tab-btn {
+      padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      cursor: pointer; border: 1px solid var(--border); background: var(--bg2);
+      color: var(--muted); transition: all .15s;
+    }
+    .tab-btn.active { background: var(--bg3); color: var(--text); border-color: var(--accent); }
+    .tab-btn:hover { color: var(--text); }
+
+    /* ── Responsive ── */
+    @media(max-width:560px){
+      h1 { font-size: 20px; }
+      main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="route-pill">
+      ✈️ <span>HKG</span> Hong Kong &nbsp;⇌&nbsp; <span>MNL</span> Manila
+    </div>
+    <h1>Flight &amp; Stay Tracker</h1>
+    <p class="subtitle">Round-trip price explorer · May 2025 · Stays &gt; 7 nights</p>
+    <div class="badges">
+      <div class="badge">Depart: <b>May 17 – 21</b></div>
+      <div class="badge">Return: <b>up to May 28</b></div>
+      <div class="badge">Min stay: <b>8 nights</b></div>
+      <div class="badge">Area: <b>Makati, Metro Manila</b></div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── SECTION 1: FLIGHT MATRIX ── -->
+  <div class="section">
+    <div class="section-title"><span class="icon">✈️</span> Flight Date Matrix</div>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:14px;line-height:1.55">
+      Each cell = one round-trip. Click a booking button to open a pre-filled search.
+      Greyed cells are &lt;8 nights. <b style="color:var(--green)">Green night badges</b> = sweet-spot 10–11 nights.
+    </p>
+
+    <div class="matrix-wrapper" id="matrix-container">
+      <!-- JS-generated below -->
+    </div>
+  </div>
+
+  <!-- ── SECTION 2: ACCOMMODATION ── -->
+  <div class="section">
+    <div class="section-title"><span class="icon">🏠</span> Accommodation in Makati</div>
+
+    <div class="tab-row" id="acc-tabs">
+      <button class="tab-btn active" data-tab="airbnb">Airbnb</button>
+      <button class="tab-btn" data-tab="hotels">Hotels</button>
+    </div>
+
+    <div id="acc-airbnb" class="acc-tab">
+      <div class="acc-grid" id="airbnb-grid">
+        <!-- JS-generated -->
+      </div>
+      <div class="acc-note" style="margin-top:10px">
+        Links open Airbnb filtered to <b>Makati, Metro Manila</b> for your dates. Prices vary — entire apartments in Makati typically run <b>₱3,500–₱8,000/night</b> (≈ HKD 490–1,120). Filter by "Entire place" for privacy.
+      </div>
+    </div>
+
+    <div id="acc-hotels" class="acc-tab" style="display:none">
+      <div class="acc-grid" id="hotels-grid">
+        <!-- JS-generated -->
+      </div>
+      <div class="acc-note" style="margin-top:10px">
+        Links open hotel searches filtered to <b>Makati City</b>. Mid-range hotels (Seda, Citadines, Acacia) typically run <b>₱4,500–₱9,000/night</b> (≈ HKD 630–1,260). Business hotels near Ayala are well-connected.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 3: TIPS ── -->
+  <div class="section">
+    <div class="section-title"><span class="icon">💡</span> Planning Tips</div>
+    <div class="tips-grid">
+      <div class="tip-card">
+        <div class="tip-icon">🕐</div>
+        <h4>Best time to book flights</h4>
+        <p>HKG–MNL is a competitive short-haul route. Check <b>Cebu Pacific</b>, <b>Philippine Airlines</b>, and <b>Cathay Pacific</b>. Prices often drop 6–8 weeks before departure.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">📅</div>
+        <h4>Flexible sweet spot</h4>
+        <p>Departing <b>May 19–20</b> (Tue/Wed) and returning <b>May 27–28</b> (Tue/Wed) tend to be cheapest. Avoid Monday/Friday peaks.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">🏙️</div>
+        <h4>Makati stay tips</h4>
+        <p>Stay near <b>Ayala Triangle</b> or <b>Legazpi Village</b> for walkability. Grab and Angkas are cheap for transport. Check <a href="https://www.booking.com/searchresults.html?ss=Makati&checkin=2025-05-17&checkout=2025-05-28" target="_blank">Booking.com</a> for last-minute hotel deals.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">💸</div>
+        <h4>Budget estimate</h4>
+        <p>Flight ~HKD 1,400–2,800 return. Airbnb ~HKD 490–900/night. Budget for 10 nights + flights: roughly <b>HKD 7,000–12,000</b> total.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">🌦️</div>
+        <h4>May weather in Manila</h4>
+        <p>Late May is the start of rainy season. Expect hot days (~33°C) with afternoon thunderstorms. Indoor malls (Greenbelt, Glorietta) are a lifesaver.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">🔍</div>
+        <h4>Price alert tools</h4>
+        <p>Set alerts on <a href="https://www.google.com/travel/flights" target="_blank">Google Flights</a> and <a href="https://www.skyscanner.com" target="_blank">Skyscanner</a> for HKG→MNL. Email alerts fire when price drops by 10%+.</p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <p>Prices shown are indicative. Always verify on booking sites. · Last refreshed: <span id="refresh-time"></span></p>
+</footer>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+
+const DEPART_DATES = [
+  { label: 'Sat 17 May', iso: '2025-05-17', sky: '250517' },
+  { label: 'Sun 18 May', iso: '2025-05-18', sky: '250518' },
+  { label: 'Mon 19 May', iso: '2025-05-19', sky: '250519' },
+  { label: 'Tue 20 May', iso: '2025-05-20', sky: '250520' },
+  { label: 'Wed 21 May', iso: '2025-05-21', sky: '250521' },
+];
+
+const RETURN_DATES = [
+  { label: 'Sat 24 May', iso: '2025-05-24', sky: '250524' },
+  { label: 'Sun 25 May', iso: '2025-05-25', sky: '250525' },
+  { label: 'Mon 26 May', iso: '2025-05-26', sky: '250526' },
+  { label: 'Tue 27 May', iso: '2025-05-27', sky: '250527' },
+  { label: 'Wed 28 May', iso: '2025-05-28', sky: '250528' },
+];
+
+function nightsBetween(d1, d2) {
+  return (new Date(d2) - new Date(d1)) / 86400000;
+}
+
+// ── URL generators ────────────────────────────────────────────────────────────
+
+function googleFlightsUrl(dep, ret) {
+  // Google Flights explore URL with IATA codes and dates
+  const q = `Flights from HKG to MNL on ${dep.label.replace(/\d+ /,'')} return ${ret.label.replace(/\d+ /,'')}`;
+  return `https://www.google.com/travel/flights#flt=HKG.MNL.${dep.iso}*MNL.HKG.${ret.iso};c:HKD;e:1;ls:1w;sd:1;t:f`;
+}
+
+function skyscannerUrl(dep, ret) {
+  return `https://www.skyscanner.com/transport/flights/hkg/mnl/${dep.sky}/${ret.sky}/?adults=1&children=0&adultsv2=1&childrenv2=&infants=0&cabinclass=economy&rtn=1&preferdirects=false&currency=HKD`;
+}
+
+function kiwi(dep, ret) {
+  return `https://www.kiwi.com/en/search/results/hong-kong-city/manila-city/month-${dep.iso.slice(0,7)}/${ret.iso.slice(0,7)}/?adults=1&currency=HKD`;
+}
+
+function airbnbUrl(checkin, checkout) {
+  return `https://www.airbnb.com/s/Makati-City--Metro-Manila--Philippines/homes?checkin=${checkin}&checkout=${checkout}&adults=1&refinement_paths%5B%5D=%2Fhomes&room_types%5B%5D=Entire+home%2Fapt&ne_lat=14.5764&ne_lng=121.0421&sw_lat=14.5411&sw_lng=121.0012&zoom=14`;
+}
+
+function bookingUrl(checkin, checkout) {
+  return `https://www.booking.com/searchresults.html?ss=Makati+City&checkin=${checkin}&checkout=${checkout}&group_adults=1&no_rooms=1&selected_currency=HKD&order=price`;
+}
+
+function agodaUrl(checkin, checkout) {
+  return `https://www.agoda.com/search?city=6477&checkIn=${checkin}&checkOut=${checkout}&rooms=1&adults=1&cid=1781452`;
+}
+
+// ── Build flight matrix ───────────────────────────────────────────────────────
+
+function buildMatrix() {
+  const container = document.getElementById('matrix-container');
+
+  let html = '<table><thead><tr>';
+  html += '<th class="corner">↙ Depart / Return ↗</th>';
+  for (const r of RETURN_DATES) {
+    html += `<th>${r.label}</th>`;
+  }
+  html += '</tr></thead><tbody>';
+
+  for (const d of DEPART_DATES) {
+    html += `<tr><td class="row-label">${d.label}</td>`;
+    for (const r of RETURN_DATES) {
+      const nights = nightsBetween(d.iso, r.iso);
+      const valid = nights > 7;
+      const best = nights >= 10;
+
+      if (!valid) {
+        html += `<td><div class="cell invalid"><span class="nights">${nights}n</span><span style="font-size:10px;color:var(--muted)">—</span></div></td>`;
+      } else {
+        const gf  = googleFlightsUrl(d, r);
+        const sky = skyscannerUrl(d, r);
+        const kw  = kiwi(d, r);
+        html += `<td><div class="cell${best?' best':''}">
+          <span class="nights">${nights} nights</span>
+          <div class="btn-row">
+            <a class="btn btn-gf" href="${gf}" target="_blank" rel="noopener">G Flights</a>
+            <a class="btn btn-sky" href="${sky}" target="_blank" rel="noopener">Skyscanner</a>
+          </div>
+          <div class="btn-row">
+            <a class="btn btn-kw" href="${kw}" target="_blank" rel="noopener">Kiwi.com</a>
+          </div>
+        </div></td>`;
+      }
+    }
+    html += '</tr>';
+  }
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+// ── Build accommodation sections ──────────────────────────────────────────────
+
+function buildAirbnb() {
+  const combos = [
+    { dep: '2025-05-17', ret: '2025-05-27', nights: 10, label: 'May 17 → 27' },
+    { dep: '2025-05-17', ret: '2025-05-28', nights: 11, label: 'May 17 → 28' },
+    { dep: '2025-05-18', ret: '2025-05-28', nights: 10, label: 'May 18 → 28' },
+    { dep: '2025-05-19', ret: '2025-05-27', nights: 8,  label: 'May 19 → 27' },
+    { dep: '2025-05-19', ret: '2025-05-28', nights: 9,  label: 'May 19 → 28' },
+    { dep: '2025-05-20', ret: '2025-05-28', nights: 8,  label: 'May 20 → 28' },
+  ];
+
+  const grid = document.getElementById('airbnb-grid');
+  let html = '';
+
+  const chunks = [combos.slice(0,3), combos.slice(3)];
+  for (const chunk of chunks) {
+    html += `<div class="acc-card"><div class="acc-header"><span class="acc-logo">🏠</span><div class="acc-header-text"><h3>Airbnb · Makati</h3><p>Entire apartments, Makati City</p></div></div><div class="acc-links">`;
+    for (const c of chunk) {
+      html += `<a class="acc-link-row" href="${airbnbUrl(c.dep, c.ret)}" target="_blank" rel="noopener">
+        <div class="info"><div class="dates">${c.label}</div><div class="nights-txt">${c.nights} nights · Makati entire home</div></div>
+        <span class="arrow">→</span>
+      </a>`;
+    }
+    html += `</div></div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function buildHotels() {
+  const combos = [
+    { dep: '2025-05-17', ret: '2025-05-27', nights: 10, label: 'May 17 → 27' },
+    { dep: '2025-05-17', ret: '2025-05-28', nights: 11, label: 'May 17 → 28' },
+    { dep: '2025-05-18', ret: '2025-05-28', nights: 10, label: 'May 18 → 28' },
+    { dep: '2025-05-19', ret: '2025-05-27', nights: 8,  label: 'May 19 → 27' },
+    { dep: '2025-05-19', ret: '2025-05-28', nights: 9,  label: 'May 19 → 28' },
+    { dep: '2025-05-20', ret: '2025-05-28', nights: 8,  label: 'May 20 → 28' },
+  ];
+
+  const grid = document.getElementById('hotels-grid');
+  let html = '';
+
+  // Booking.com card
+  html += `<div class="acc-card"><div class="acc-header"><span class="acc-logo">🏨</span><div class="acc-header-text"><h3>Booking.com · Makati</h3><p>Hotels & serviced apartments</p></div></div><div class="acc-links">`;
+  for (const c of combos.slice(0,3)) {
+    html += `<a class="acc-link-row" href="${bookingUrl(c.dep, c.ret)}" target="_blank" rel="noopener">
+      <div class="info"><div class="dates">${c.label}</div><div class="nights-txt">${c.nights} nights · sorted by price</div></div>
+      <span class="arrow">→</span>
+    </a>`;
+  }
+  html += `</div></div>`;
+
+  // Agoda card
+  html += `<div class="acc-card"><div class="acc-header"><span class="acc-logo">🛎️</span><div class="acc-header-text"><h3>Agoda · Makati</h3><p>Often cheapest for Asia hotels</p></div></div><div class="acc-links">`;
+  for (const c of combos.slice(3)) {
+    html += `<a class="acc-link-row" href="${agodaUrl(c.dep, c.ret)}" target="_blank" rel="noopener">
+      <div class="info"><div class="dates">${c.label}</div><div class="nights-txt">${c.nights} nights · Makati City</div></div>
+      <span class="arrow">→</span>
+    </a>`;
+  }
+  html += `</div></div>`;
+
+  grid.innerHTML = html;
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+
+document.getElementById('acc-tabs').addEventListener('click', e => {
+  const btn = e.target.closest('.tab-btn');
+  if (!btn) return;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.acc-tab').forEach(t => t.style.display = 'none');
+  btn.classList.add('active');
+  document.getElementById('acc-' + btn.dataset.tab).style.display = 'block';
+});
+
+// ── Timestamp ─────────────────────────────────────────────────────────────────
+document.getElementById('refresh-time').textContent = new Date().toLocaleString('en-HK', {
+  timeZone: 'Asia/Hong_Kong', dateStyle: 'medium', timeStyle: 'short'
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+buildMatrix();
+buildAirbnb();
+buildHotels();
+</script>
+</body>
+</html>
